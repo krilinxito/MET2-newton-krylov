@@ -1,0 +1,11 @@
+# Artefactos de Python
+__pycache__/
+*.py[cod]
+
+# Archivos de bloqueo de LibreOffice / MS Office
+.~lock.*#
+~$*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

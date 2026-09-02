@@ -1,0 +1,1014 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estrategias para la convergencia global — Métodos de Newton-Krylov</title>
+<style>
+:root{
+  --fondo:#0e1420; --fondo2:#131c2b; --panel:#182335;
+  --texto:#e8eef7; --tenue:#93a4bd; --borde:#26344b;
+  --acento:#4da3ff; --acento2:#ffc857; --ok:#4ade80; --mal:#f87171; --morado:#c084fc;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--fondo); color:var(--texto); overflow:hidden;
+  font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  font-size:calc(10px + 0.85vw); line-height:1.5;
+}
+#deck{position:relative;width:100vw;height:100vh}
+.slide{
+  position:absolute; inset:0; display:none;
+  flex-direction:column; justify-content:center;
+  padding:4.2vh 5.5vw 7vh; overflow:hidden;
+}
+.slide.activa{display:flex; animation:entra .28s ease}
+@keyframes entra{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+h1{font-size:2.05em;line-height:1.15;font-weight:700;letter-spacing:-.01em}
+h2{font-size:1.5em;line-height:1.2;font-weight:700;margin-bottom:.55em;
+   color:#fff;border-bottom:2px solid var(--acento);padding-bottom:.3em;display:inline-block}
+h3{font-size:1.05em;color:var(--acento2);font-weight:650;margin:.7em 0 .3em}
+p{margin:.45em 0}
+ul{margin:.35em 0 .35em 1.1em}
+li{margin:.34em 0}
+li::marker{color:var(--acento)}
+strong{color:#fff}
+em{color:var(--acento2);font-style:normal;font-weight:600}
+.tenue{color:var(--tenue)}
+.chico{font-size:.82em}
+.centro{text-align:center}
+
+/* ---- matemática: Unicode + tipografía serif itálica ---- */
+.m{font-family:"Cambria Math",Cambria,"Latin Modern Math",Georgia,"Times New Roman",serif;
+   font-style:italic;white-space:nowrap}
+.eq{font-family:"Cambria Math",Cambria,Georgia,"Times New Roman",serif;
+    background:var(--panel);border-left:3px solid var(--acento);
+    border-radius:0 6px 6px 0;padding:.55em .9em;margin:.6em 0;
+    font-size:1.12em;text-align:center;overflow-x:auto}
+.eq .var{font-style:italic}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;
+      margin:0 .3em;font-size:.86em;line-height:1.25}
+.frac>span:first-child{border-bottom:1.4px solid currentColor;padding:0 .3em}
+.frac>span:last-child{padding:0 .3em}
+
+/* ---- cajas ---- */
+.caja{background:var(--panel);border:1px solid var(--borde);border-radius:8px;
+      padding:.7em 1em;margin:.5em 0}
+.caja.ok{border-left:4px solid var(--ok)}
+.caja.mal{border-left:4px solid var(--mal)}
+.caja.clave{border-left:4px solid var(--acento2);background:#1d2436}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:1.3em;align-items:start}
+.cols3{display:grid;grid-template-columns:repeat(3,1fr);gap:1em;align-items:start}
+.crece{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0}
+
+/* ---- figuras ---- */
+figure{margin:.4em 0;text-align:center;min-height:0;display:flex;
+       flex-direction:column;justify-content:center;align-items:center}
+figure img{max-width:100%;max-height:56vh;object-fit:contain;
+           border-radius:8px;background:#fff;padding:.35em}
+/* diapositivas que llevan figura Y tabla o cajas: la figura cede espacio */
+.slide.compacta figure img{max-height:38vh}
+figcaption{color:var(--tenue);font-size:.78em;margin-top:.4em}
+
+/* ---- tablas ---- */
+table{border-collapse:collapse;width:100%;font-size:.83em;margin:.4em 0}
+th,td{padding:.4em .55em;text-align:left;border-bottom:1px solid var(--borde)}
+th{color:var(--acento);font-weight:650;border-bottom:2px solid var(--borde);
+   font-size:.88em;letter-spacing:.02em}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.destaca td{background:#1c2a3f;color:#fff;font-weight:600}
+.si{color:var(--ok);font-weight:700}
+.no{color:var(--mal);font-weight:700}
+
+/* ---- código ---- */
+pre{background:#0b1220;border:1px solid var(--borde);border-radius:8px;
+    padding:.75em 1em;overflow:auto;font-size:.78em;line-height:1.45}
+code{font-family:"JetBrains Mono","Cascadia Code",Consolas,"DejaVu Sans Mono",monospace}
+pre .c{color:#6b7f9e}
+pre .k{color:var(--morado)}
+pre .s{color:var(--ok)}
+
+/* ---- portada ---- */
+.portada{align-items:center;text-align:center;justify-content:center}
+.portada .sup{color:var(--tenue);font-size:.85em;letter-spacing:.13em;text-transform:uppercase}
+.portada .regla{width:min(760px,80vw);height:2px;background:var(--acento);margin:1.1em 0}
+.portada .sub{color:var(--acento2);font-size:1.05em;margin-top:.35em}
+.portada .datos{margin-top:1.6em;font-size:.9em;color:var(--tenue);line-height:1.9}
+.portada .datos b{color:var(--texto)}
+
+/* ---- cromo ---- */
+#barra{position:fixed;left:0;bottom:0;height:3px;background:var(--acento);
+       transition:width .25s ease;z-index:20}
+#num{position:fixed;right:1.4vw;bottom:1.6vh;color:var(--tenue);font-size:.72em;
+     font-variant-numeric:tabular-nums;z-index:20}
+#tema{position:fixed;left:1.4vw;bottom:1.6vh;color:var(--tenue);font-size:.72em;z-index:20}
+#ayuda{position:fixed;inset:0;background:rgba(8,12,20,.94);display:none;
+       align-items:center;justify-content:center;z-index:40}
+#ayuda.on{display:flex}
+#ayuda div{background:var(--panel);border:1px solid var(--borde);border-radius:10px;
+           padding:1.6em 2.2em;font-size:.9em}
+#ayuda kbd{background:#0b1220;border:1px solid var(--borde);border-radius:4px;
+           padding:.1em .45em;font-family:monospace;color:var(--acento)}
+#ayuda tr td{border:none;padding:.3em .8em}
+
+/* ---- vista general ---- */
+body.general #deck{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  padding:10px;overflow-y:auto;height:100vh;align-content:start}
+body.general .slide{position:relative;display:flex;inset:auto;height:auto;
+  aspect-ratio:16/9;font-size:.30em;padding:1.1em;border:1px solid var(--borde);
+  border-radius:6px;background:var(--fondo2);cursor:pointer;overflow:hidden;animation:none}
+body.general .slide.activa{border-color:var(--acento);box-shadow:0 0 0 2px var(--acento)}
+body.general figure img{max-height:none}
+body.general #barra,body.general #num{display:none}
+
+/* ---- impresión ---- */
+@media print{
+  body{overflow:visible;background:#fff;color:#111;font-size:11pt}
+  .slide{display:flex!important;position:relative;inset:auto;height:auto;
+         page-break-after:always;padding:1.5cm;border-bottom:1px solid #ccc}
+  h2{color:#111;border-color:#1f4e79}
+  .caja,.eq,pre{background:#f4f7fb;color:#111}
+  figure img{max-height:none;width:100%}
+  #barra,#num,#tema,#ayuda{display:none!important}
+  .tenue,figcaption{color:#555}
+  th{color:#1f4e79}
+}
+</style>
+</head>
+<body>
+<div id="deck">
+
+<!-- ============================ 1 · PORTADA ============================ -->
+<section class="slide portada">
+  <div class="sup">Universidad Mayor de San Andrés · Facultad de Ciencias Puras y Naturales · Carrera de Informática</div>
+  <div class="regla"></div>
+  <h1>Estrategias para la convergencia global</h1>
+  <div class="sub">Métodos de Newton-Krylov</div>
+  <div class="regla"></div>
+  <div class="datos">
+    <b>Maximiliano Gómez Mallo</b> &nbsp;·&nbsp; <b>Iver Samuel Medina Balboa</b><br>
+    Métodos Numéricos II &nbsp;—&nbsp; <b>DAT-252</b><br>
+    Docente: M.Sc. Carlos Mullisaca Choque<br>
+    La Paz, Bolivia — 1 de Septiembre de 2026
+  </div>
+  <div class="chico tenue" style="margin-top:2em">
+    <kbd>→</kbd> avanzar &nbsp;·&nbsp; <kbd>o</kbd> vista general &nbsp;·&nbsp; <kbd>?</kbd> ayuda
+  </div>
+</section>
+
+<!-- ============================ 2 · EL PROBLEMA ============================ -->
+<section class="slide">
+  <h2>El problema</h2>
+  <div class="cols">
+    <div>
+      <p>Resolver un sistema de ecuaciones <strong>no lineales</strong>:</p>
+      <div class="eq">F(<span class="var">x</span>) = 0 ,&nbsp;&nbsp; F : ℝⁿ → ℝⁿ</div>
+      <p>Casi nunca aparece así de puro. Aparece al final de otra cosa:</p>
+      <ul>
+        <li>discretizar una <em>EDP no lineal</em> (combustión, flujo, elasticidad)</li>
+        <li>el paso implícito de un integrador temporal <em>rígido</em></li>
+        <li>condiciones de optimalidad de un problema de optimización</li>
+        <li>equilibrio de un circuito o de una red</li>
+      </ul>
+    </div>
+    <div>
+      <div class="caja clave">
+        <h3>El dato que cambia todo</h3>
+        <p><span class="m">n</span> no es 2 ni 10. Es <strong>10⁴, 10⁶, 10⁹</strong>.</p>
+        <p class="chico tenue" style="margin-top:.5em">Una malla de 100×100×100 en 3D ya da
+        <span class="m">n</span> = 10⁶. El Jacobiano tendría 10¹² entradas: 8 terabytes.</p>
+      </div>
+      <div class="caja">
+        <p>Con <span class="m">n</span> grande, tres cosas que en la clase de Cálculo Numérico eran gratis
+        dejan de serlo:</p>
+        <ul class="chico">
+          <li>escribir el Jacobiano</li>
+          <li>invertirlo</li>
+          <li>saber por dónde empezar</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 3 · AGENDA ============================ -->
+<section class="slide">
+  <h2>Hacia dónde vamos</h2>
+  <div class="cols3">
+    <div class="caja mal">
+      <h3>Dolor 1 — el sistema lineal</h3>
+      <p class="chico">Resolver <span class="m">J s = −F</span> exactamente es carísimo.</p>
+      <p class="chico" style="margin-top:.5em"><strong>→ Newton inexacto</strong><br>
+      <span class="tenue">Dembo–Eisenstat–Steihaug 1982</span></p>
+    </div>
+    <div class="caja mal">
+      <h3>Dolor 2 — la matriz</h3>
+      <p class="chico">Ni siquiera se puede formar ni guardar <span class="m">J</span>.</p>
+      <p class="chico" style="margin-top:.5em"><strong>→ Krylov matriz-libre</strong><br>
+      <span class="tenue">Knoll–Keyes 2004</span></p>
+    </div>
+    <div class="caja mal">
+      <h3>Dolor 3 — el arranque</h3>
+      <p class="chico">Newton solo converge <em>cerca</em> de la raíz.</p>
+      <p class="chico" style="margin-top:.5em"><strong>→ Globalización</strong><br>
+      <span class="tenue">el tema de hoy</span></p>
+    </div>
+  </div>
+  <div class="caja clave" style="margin-top:1.2em">
+    <p>Los tres juntos dan el método <strong>Newton-Krylov globalizado</strong>: lo que hay
+    dentro de <code>scipy.optimize.newton_krylov</code>, de PETSc SNES y de SUNDIALS KINSOL.</p>
+  </div>
+</section>
+
+<!-- ============================ 4 · NEWTON ============================ -->
+<section class="slide">
+  <h2>Newton, y la letra chica de su teorema</h2>
+  <div class="cols">
+    <div>
+      <p>Linealizar y resolver:</p>
+      <div class="eq">F(<span class="var">x</span>+<span class="var">s</span>) ≈ F(<span class="var">x</span>) + J(<span class="var">x</span>)<span class="var">s</span> = 0</div>
+      <div class="eq">J(<span class="var">x</span><sub>k</sub>) <span class="var">s</span><sub>k</sub> = −F(<span class="var">x</span><sub>k</sub>) ,&nbsp;&nbsp; <span class="var">x</span><sub>k+1</sub> = <span class="var">x</span><sub>k</sub> + <span class="var">s</span><sub>k</sub></div>
+      <h3>Teorema (convergencia local)</h3>
+      <p class="chico">Si F es continuamente diferenciable, <span class="m">J(x*)</span> es no
+      singular y J es Lipschitz cerca de <span class="m">x*</span>, entonces existe
+      <span class="m">δ &gt; 0</span> tal que para todo
+      <span class="m">‖x₀ − x*‖ &lt; δ</span>:</p>
+      <div class="eq">‖<span class="var">x</span><sub>k+1</sub> − <span class="var">x</span>*‖ ≤ C ‖<span class="var">x</span><sub>k</sub> − <span class="var">x</span>*‖²</div>
+    </div>
+    <div>
+      <div class="caja mal">
+        <h3>Las cuatro palabras del problema</h3>
+        <p style="font-size:1.25em;text-align:center;margin:.5em 0">
+          «existe <span class="m">δ &gt; 0</span> tal que»</p>
+        <p class="chico">El teorema no dice cuánto vale <span class="m">δ</span>. No da manera de
+        calcularlo. Y en problemas reales <span class="m">δ</span> puede ser
+        <strong>ridículamente pequeño</strong>.</p>
+      </div>
+      <div class="caja">
+        <p class="chico">La convergencia cuadrática es real y es espectacular:
+        3 → 6 → 12 → 24 cifras correctas. Pero <strong>solo se activa si ya estabas
+        cerca</strong>. Fuera de esa bola, el teorema no promete absolutamente nada,
+        y "nada" incluye divergir.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 5 · DEMO arctan ============================ -->
+<section class="slide">
+  <h2>Demostración 1 — el caso más simple posible</h2>
+  <p class="chico">Resolver <span class="m">arctan(x) = 0</span>. Raíz en
+  <span class="m">x* = 0</span>. Función suave, monótona, sin sorpresas… y el umbral de
+  convergencia de Newton está en <span class="m">|x₀| ≈ 1.3917</span>.</p>
+  <figure class="crece">
+    <img src="%%FIG:fig1a_arctan.png%%" alt="Newton diverge en arctan">
+    <figcaption>Izquierda: cada tangente cruza el eje más lejos que la anterior. Derecha: desde el
+    mismo <span class="m">x₀ = 2</span>, Newton puro diverge y Newton con búsqueda de línea converge
+    en 5 iteraciones.</figcaption>
+  </figure>
+  <p class="chico tenue centro">Si esto pasa con arctan, imaginen con un sistema de 10⁶ ecuaciones
+  acopladas.</p>
+</section>
+
+<!-- ============================ 6 · NEWTON INEXACTO ============================ -->
+<section class="slide">
+  <h2>Dolor 1 — Newton inexacto</h2>
+  <div class="cols">
+    <div>
+      <p>La observación: si <span class="m">x<sub>k</sub></span> está lejos de la raíz, el modelo
+      lineal <span class="m">J s = −F</span> es una mentira. ¿Para qué resolver una mentira con
+      16 cifras?</p>
+      <div class="caja clave">
+        <h3>Criterio de Newton inexacto</h3>
+        <p>Aceptar cualquier <span class="m">s<sub>k</sub></span> que cumpla</p>
+        <div class="eq" style="background:#0e1420">‖J(<span class="var">x</span><sub>k</sub>)<span class="var">s</span><sub>k</sub> + F(<span class="var">x</span><sub>k</sub>)‖ ≤ η<sub>k</sub> ‖F(<span class="var">x</span><sub>k</sub>)‖</div>
+        <p class="chico">A <span class="m">η<sub>k</sub> ∈ [0,1)</span> se le llama
+        <strong>término de forzado</strong>.</p>
+      </div>
+      <p class="chico tenue">Esto abre la puerta a resolver el sistema lineal con un método
+      <em>iterativo</em>, que se puede cortar cuando uno quiera.</p>
+    </div>
+    <div>
+      <h3>Teorema (Dembo, Eisenstat &amp; Steihaug, 1982)</h3>
+      <table>
+        <tr><th>Si se elige…</th><th>se obtiene</th></tr>
+        <tr><td><span class="m">η<sub>k</sub> ≤ η &lt; 1</span> constante</td><td>convergencia <strong>lineal</strong></td></tr>
+        <tr><td><span class="m">η<sub>k</sub> → 0</span></td><td>convergencia <strong>superlineal</strong></td></tr>
+        <tr class="destaca"><td><span class="m">η<sub>k</sub> = O(‖F<sub>k</sub>‖)</span></td><td>convergencia <strong>cuadrática</strong></td></tr>
+      </table>
+      <div class="caja ok">
+        <p class="chico">O sea: <strong>se puede ser perezoso y no pagar nada</strong>, siempre que
+        la pereza se apriete al ritmo correcto. Ese es todo el arte del método.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 7 · EISENSTAT-WALKER ============================ -->
+<section class="slide">
+  <h2>Cómo elegir η solo — Eisenstat &amp; Walker (1996)</h2>
+  <div class="cols">
+    <div>
+      <p class="chico">La idea: mirar cuánto se equivocó el modelo lineal en el paso anterior y
+      pedirle al siguiente exactamente esa precisión, ni más ni menos.</p>
+      <h3>Choice 1</h3>
+      <div class="eq chico">η<sub>k</sub> = <span class="frac"><span>| ‖F<sub>k</sub>‖ − ‖F<sub>k−1</sub> + J<sub>k−1</sub>s<sub>k−1</sub>‖ |</span><span>‖F<sub>k−1</sub>‖</span></span></div>
+      <h3>Choice 2</h3>
+      <div class="eq chico">η<sub>k</sub> = γ ( ‖F<sub>k</sub>‖ / ‖F<sub>k−1</sub>‖ )<sup>α</sup> ,&nbsp;&nbsp; γ = 0.9 ,&nbsp; α = 1.618</div>
+      <p class="chico"><strong>Salvaguarda:</strong> si <span class="m">γ η<sub>k−1</sub><sup>α</sup> &gt; 0.1</span>, tomar
+      <span class="m">η<sub>k</sub> = max(η<sub>k</sub>, γ η<sub>k−1</sub><sup>α</sup>)</span>.
+      Impide que η se desplome por un paso afortunado suelto.</p>
+    </div>
+    <div>
+      <h3>Lo que hace en la práctica</h3>
+      <p class="chico tenue">Bratu 1D, N = 250, medido en nuestra implementación:</p>
+      <table>
+        <tr><th>k</th><th class="num">η elegido</th><th class="num">‖F<sub>k</sub>‖</th></tr>
+        <tr><td>0</td><td class="num">9.0·10⁻¹</td><td class="num">7.5·10⁻⁴</td></tr>
+        <tr><td>1</td><td class="num">7.6·10⁻¹</td><td class="num">1.7·10⁻⁴</td></tr>
+        <tr><td>2</td><td class="num">5.8·10⁻¹</td><td class="num">1.2·10⁻⁴</td></tr>
+        <tr><td>3</td><td class="num">3.7·10⁻¹</td><td class="num">1.4·10⁻⁵</td></tr>
+        <tr><td>4</td><td class="num">1.8·10⁻¹</td><td class="num">1.6·10⁻⁶</td></tr>
+        <tr class="destaca"><td>5</td><td class="num">9.2·10⁻³</td><td class="num">5.4·10⁻⁸</td></tr>
+      </table>
+      <div class="caja ok">
+        <p class="chico">Empieza flojo (η = 0.9: casi no resuelve nada) y aprieta solo cuando el
+        residuo demuestra que el modelo lineal ya sirve. <strong>Nadie se lo dijo.</strong></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 8 · OVERSOLVING ============================ -->
+<section class="slide">
+  <h2>Por qué esto importa: el <em>oversolving</em></h2>
+  <p class="chico">Bratu 1D, N = 250, λ = 3. Misma globalización, mismo GMRES.
+  <strong>Lo único que cambia es η.</strong></p>
+  <table>
+    <tr><th>término de forzado</th><th class="num">iteraciones de Newton</th><th class="num">productos J·v</th><th class="num">tiempo</th></tr>
+    <tr><td>η = 10⁻¹ fijo</td><td class="num">7</td><td class="num">9 854</td><td class="num">1.8 s</td></tr>
+    <tr><td>η = 10⁻³ fijo</td><td class="num">4</td><td class="num">21 332</td><td class="num">3.9 s</td></tr>
+    <tr class="destaca"><td>η = 10⁻¹² fijo</td><td class="num">4</td><td class="num">24 804</td><td class="num">4.4 s</td></tr>
+    <tr><td>Eisenstat-Walker 2</td><td class="num">8</td><td class="num"><span class="si">9 707</span></td><td class="num">1.8 s</td></tr>
+  </table>
+  <div class="cols" style="margin-top:.8em">
+    <div class="caja mal">
+      <p class="chico">La fila resaltada usa <strong>la mitad</strong> de iteraciones de Newton…
+      y <strong>2.6× más trabajo</strong>. Contar iteraciones externas engaña.</p>
+    </div>
+    <div class="caja ok">
+      <p class="chico">La métrica honesta es <strong>productos J·v</strong>, porque cada uno cuesta
+      exactamente una evaluación de F — que en un problema real es una simulación entera.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 9 · KRYLOV ============================ -->
+<section class="slide">
+  <h2>Dolor 2 — subespacios de Krylov</h2>
+  <div class="cols">
+    <div>
+      <p>Para resolver <span class="m">A s = b</span> de forma iterativa, se busca la mejor
+      solución dentro del subespacio</p>
+      <div class="eq">𝒦<sub>m</sub>(A, <span class="var">b</span>) = span{ <span class="var">b</span>, A<span class="var">b</span>, A²<span class="var">b</span>, …, A<sup>m−1</sup><span class="var">b</span> }</div>
+      <div class="caja clave">
+        <p><strong>La observación que lo cambia todo:</strong> construir esa base solo requiere
+        <em>multiplicar por A</em>. Nunca se necesita A entrada por entrada, ni factorizarla, ni
+        siquiera almacenarla.</p>
+      </div>
+      <p class="chico">Basta con una función que, dado <span class="m">v</span>, devuelva
+      <span class="m">A·v</span>.</p>
+    </div>
+    <div>
+      <h3>Qué método usar</h3>
+      <table>
+        <tr><th>método</th><th>requisito</th><th>costo</th></tr>
+        <tr class="destaca"><td>GMRES</td><td>ninguno</td><td>memoria crece con m</td></tr>
+        <tr><td>BiCGSTAB</td><td>ninguno</td><td>memoria fija, menos estable</td></tr>
+        <tr><td>TFQMR</td><td>ninguno</td><td>memoria fija</td></tr>
+        <tr><td>CG</td><td><strong>A simétrica definida positiva</strong></td><td>el más barato</td></tr>
+      </table>
+      <div class="caja">
+        <p class="chico">Se usa <strong>GMRES</strong> (con reinicio) porque el Jacobiano de un
+        problema real <em>no</em> es simétrico: en cuanto hay convección, transporte o acoplamiento
+        asimétrico, CG no aplica.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 10 · J SIN J ============================ -->
+<section class="slide">
+  <h2>El Jacobiano sin Jacobiano</h2>
+  <div class="cols">
+    <div>
+      <p>GMRES solo pide <span class="m">J·v</span>. Y eso es una derivada direccional, que se
+      aproxima con <strong>una sola evaluación de F</strong>:</p>
+      <div class="eq">J(<span class="var">x</span>)·<span class="var">v</span> ≈ <span class="frac"><span>F(<span class="var">x</span> + ε<span class="var">v</span>) − F(<span class="var">x</span>)</span><span>ε</span></span></div>
+      <p class="chico">Eso es todo el método <em>Jacobian-Free Newton-Krylov</em> (JFNK).
+      Nunca se escribe una sola entrada de J.</p>
+      <h3>La elección de ε</h3>
+      <ul class="chico">
+        <li>truncamiento ≈ <span class="m">(ε/2)‖F″‖‖v‖²</span> — crece con ε</li>
+        <li>cancelación ≈ <span class="m">ε<sub>maq</sub>‖F‖/(ε‖v‖)</span> — crece al bajar ε</li>
+      </ul>
+      <div class="eq chico">ε<sub>óptimo</sub> ≈ √( ε<sub>maq</sub> ‖F‖ / ‖F″‖ ) ≈ √ε<sub>maq</sub> ≈ 1.5·10⁻⁸</div>
+    </div>
+    <div>
+      <figure>
+        <img src="%%FIG:fig2a_epsilon.png%%" alt="Barrido del paso epsilon">
+        <figcaption>Error relativo de <span class="m">J·v</span> contra ε, medido contra el
+        Jacobiano analítico. El mínimo está donde se cruzan los dos errores.</figcaption>
+      </figure>
+      <div class="caja">
+        <p class="chico"><strong>Precio a pagar:</strong> J solo se conoce con ~8 cifras. Cerca de
+        la raíz la convergencia deja de ser exactamente cuadrática, y no se puede pedir un residuo
+        final mucho menor que <span class="m">‖F(x₀)‖·√ε<sub>maq</sub></span>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 11 · ALGORITMO ============================ -->
+<section class="slide">
+  <h2>El método completo, en 12 líneas</h2>
+  <div class="cols">
+    <div>
+<pre><code><span class="c"># Newton-Krylov globalizado</span>
+x = x0
+F = evaluar(x)
+<span class="k">mientras</span> ‖F‖ &gt; tol:
+
+    <span class="c"># 1. ¿cuán bien resolver? (Eisenstat-Walker)</span>
+    η = 0.9·(‖F‖/‖F_prev‖)^1.618
+
+    <span class="c"># 2. J como función, no como matriz</span>
+    Jv = <span class="k">lambda</span> v: (evaluar(x+εv) − F)/ε
+
+    <span class="c"># 3. resolver solo hasta η</span>
+    s = gmres(Jv, −F, rtol=η, M=precond)
+
+    <span class="c"># 4. GLOBALIZAR ← el tema de hoy</span>
+    λ = buscar_paso(x, s, F)
+
+    x = x + λ·s
+    F_prev, F = F, evaluar(x)</code></pre>
+    </div>
+    <div>
+      <div class="caja">
+        <h3>Lo que el usuario debe entregar</h3>
+        <p class="chico">Una función <code>F(x)</code>. Nada más.</p>
+        <p class="chico tenue">Opcionalmente un precondicionador, que es donde se gana o se pierde
+        el 90 % del rendimiento.</p>
+      </div>
+      <div class="caja clave">
+        <h3>Dónde está cada dolor</h3>
+        <ul class="chico">
+          <li><strong>Línea 1</strong> → Newton inexacto</li>
+          <li><strong>Líneas 2–3</strong> → Krylov matriz-libre</li>
+          <li><strong>Línea 4</strong> → convergencia global</li>
+        </ul>
+      </div>
+      <p class="chico tenue">Las tres primeras hacen que el método sea <em>posible</em>.
+      La cuarta hace que sea <em>confiable</em>. Sin ella, todo lo anterior sirve de poco.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 12 · PRECONDICIONAMIENTO ============================ -->
+<section class="slide">
+  <h2>Precondicionamiento — el 90 % del rendimiento</h2>
+  <div class="cols">
+    <div>
+      <p>GMRES converge rápido cuando los autovalores están <em>agrupados</em>. El Jacobiano de una
+      EDP hereda del laplaciano un condicionamiento <span class="m">O(1/h²) = O(n²)</span>.</p>
+      <div class="eq">M⁻¹ J <span class="var">s</span> = −M⁻¹ F</div>
+      <p class="chico">M debe cumplir dos cosas a la vez:</p>
+      <ul class="chico">
+        <li>parecerse a J (para agrupar el espectro)</li>
+        <li>ser <strong>barato de invertir</strong> (si no, no ganamos nada)</li>
+      </ul>
+      <p class="chico tenue">Opciones habituales: la parte lineal del operador, ILU incompleta,
+      multigrid, descomposición de dominios, o el Jacobiano <em>congelado</em> de hace unas
+      iteraciones.</p>
+    </div>
+    <div>
+      <h3>Bratu 1D, N = 250, M = laplaciano tridiagonal</h3>
+      <table>
+        <tr><th>η</th><th class="num">J·v sin M</th><th class="num">J·v con M</th><th class="num">ganancia</th></tr>
+        <tr><td>10⁻¹</td><td class="num">9 854</td><td class="num">19</td><td class="num si">519×</td></tr>
+        <tr><td>10⁻³</td><td class="num">21 332</td><td class="num">24</td><td class="num si">889×</td></tr>
+        <tr class="destaca"><td>10⁻¹²</td><td class="num">24 804</td><td class="num">24 603</td><td class="num no">1.0×</td></tr>
+        <tr><td>EW-2</td><td class="num">9 707</td><td class="num">22</td><td class="num si">441×</td></tr>
+      </table>
+      <div class="caja mal">
+        <p class="chico"><strong>La fila que no mejora.</strong> A η = 10⁻¹² le pedimos a GMRES un
+        residuo relativo por debajo de lo que la doble precisión puede dar. No lo alcanza jamás,
+        agota su presupuesto en cada paso y el precondicionador no lo salva.
+        <em>Pedir más precisión de la que existe no acelera: quema trabajo.</em></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 13 · FUNCIÓN DE MÉRITO ============================ -->
+<section class="slide">
+  <h2>Dolor 3 — convergencia global</h2>
+  <div class="cols">
+    <div>
+      <p>Newton no tiene ninguna noción de "ir mejorando". Hay que darle una.</p>
+      <div class="caja clave">
+        <h3>Función de mérito</h3>
+        <div class="eq" style="background:#0e1420">f(<span class="var">x</span>) = ½ ‖F(<span class="var">x</span>)‖² = ½ F(<span class="var">x</span>)<sup>T</sup>F(<span class="var">x</span>)</div>
+        <p class="chico">Escalar, no negativa, y vale cero <strong>exactamente</strong> en las
+        raíces de F.</p>
+      </div>
+      <p>Su gradiente es</p>
+      <div class="eq">∇f(<span class="var">x</span>) = J(<span class="var">x</span>)<sup>T</sup> F(<span class="var">x</span>)</div>
+      <p class="chico">Con esto, resolver <span class="m">F(x) = 0</span> se convierte en
+      <em>minimizar</em> <span class="m">f</span>, y toda la maquinaria de optimización sin
+      restricciones queda disponible.</p>
+    </div>
+    <div>
+      <div class="caja mal">
+        <h3>El precio de la traducción</h3>
+        <p class="chico">Toda raíz de F es un mínimo global de <span class="m">f</span>.
+        <strong>Pero no todo mínimo de <span class="m">f</span> es raíz de F.</strong></p>
+        <p class="chico" style="margin-top:.5em">Si <span class="m">∇f = JᵀF = 0</span> con
+        <span class="m">F ≠ 0</span>, entonces J es singular ahí. Son puntos estacionarios de
+        <span class="m">f</span> que no resuelven nada.</p>
+      </div>
+      <div class="caja">
+        <p class="chico">Ninguna estrategia de globalización puede evitarlos: es una limitación de
+        la <em>formulación</em>, no de los algoritmos. Lo veremos medido en la diapositiva 22.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 14 · DESIGUALDAD CLAVE ============================ -->
+<section class="slide">
+  <h2>La desigualdad que sostiene todo</h2>
+  <p class="chico">Sea <span class="m">s</span> un paso de Newton inexacto:
+  <span class="m">J s = −F + r</span> con <span class="m">‖r‖ ≤ η‖F‖</span>.
+  ¿Es <span class="m">s</span> una dirección de descenso para <span class="m">f</span>?</p>
+  <div class="eq" style="font-size:1.2em">
+    ∇f(<span class="var">x</span>)<sup>T</sup><span class="var">s</span>
+    = F<sup>T</sup>J<span class="var">s</span>
+    = F<sup>T</sup>(−F + <span class="var">r</span>)
+    = −‖F‖² + F<sup>T</sup><span class="var">r</span>
+    ≤ −‖F‖² + ‖F‖‖<span class="var">r</span>‖
+    ≤ −(1 − η)‖F‖²
+  </div>
+  <div class="cols" style="margin-top:.9em">
+    <div class="caja ok">
+      <h3>Conclusión</h3>
+      <p>Si <span class="m">η &lt; 1</span> y <span class="m">F ≠ 0</span>, entonces
+      <span class="m">∇f<sup>T</sup>s &lt; 0</span> <strong>estrictamente</strong>.</p>
+      <p class="chico" style="margin-top:.5em">El paso de Newton inexacto <em>siempre</em> apunta
+      cuesta abajo. Por lo tanto <strong>siempre existe algún λ &gt; 0 que hace bajar a
+      <span class="m">f</span></strong>: la búsqueda de línea nunca se queda sin opciones.</p>
+    </div>
+    <div class="caja clave">
+      <h3>Por qué se exige η &lt; 1</h3>
+      <p class="chico">Ahora se ve que no es un capricho ni una cota de conveniencia. Si
+      <span class="m">η ≥ 1</span> la cota se vuelve <span class="m">≤ 0</span> y ya no garantiza
+      nada: el paso podría ser <em>de subida</em>. <strong>η &lt; 1 es justo la condición que hace
+      compatibles el Newton inexacto y la globalización.</strong></p>
+      <p class="chico tenue" style="margin-top:.5em">Es la unión entre las dos mitades de la
+      exposición, y suele ser la pregunta de examen.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 15 · LÍNEA ============================ -->
+<section class="slide">
+  <h2>Estrategia A — búsqueda de línea (Armijo)</h2>
+  <div class="cols">
+    <div>
+      <p>Dirección fija, <strong>longitud negociable</strong>:
+      <span class="m">x<sub>k+1</sub> = x<sub>k</sub> + λ<sub>k</sub> s<sub>k</sub></span>.</p>
+      <div class="caja clave">
+        <h3>Condición de Armijo</h3>
+        <div class="eq" style="background:#0e1420">‖F(<span class="var">x</span> + λ<span class="var">s</span>)‖ ≤ (1 − αλ) ‖F(<span class="var">x</span>)‖ ,&nbsp;&nbsp; α = 10⁻⁴</div>
+      </div>
+      <ul class="chico">
+        <li>Se prueba <span class="m">λ = 1</span> primero: cerca de la raíz se acepta y se
+        recupera la convergencia cuadrática íntegra.</li>
+        <li>Si no, se retrocede con <em>interpolación cuadrática</em> y salvaguardas
+        <span class="m">λ<sub>nuevo</sub> ∈ [0.1λ, 0.5λ]</span>.</li>
+        <li>Se abandona si <span class="m">λ &lt; λ<sub>mín</sub></span>.</li>
+      </ul>
+      <p class="chico"><strong>¿Por qué α tan chico?</strong> Se exige una mejora casi simbólica:
+      lo justo para impedir el estancamiento, sin frenar al método.</p>
+    </div>
+    <div>
+      <div class="caja ok">
+        <h3>A favor</h3>
+        <ul class="chico">
+          <li>Trivial de implementar: 15 líneas.</li>
+          <li>Cada retroceso cuesta <strong>una</strong> evaluación de F, no un sistema lineal nuevo.</li>
+          <li>Es el valor por defecto de <code>scipy.optimize.newton_krylov</code>.</li>
+        </ul>
+      </div>
+      <div class="caja mal">
+        <h3>En contra</h3>
+        <ul class="chico">
+          <li>Solo se mueve <em>sobre la recta de Newton</em>. Si esa dirección es mala, no hay
+          nada que hacer.</li>
+          <li>Si J está mal condicionada, <span class="m">s</span> es enorme y λ se va a cero.</li>
+          <li>Baja monótonamente… incluso hacia un mínimo local que no es raíz.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 16 · REGIÓN ============================ -->
+<section class="slide">
+  <h2>Estrategia B — región de confianza</h2>
+  <div class="cols">
+    <div>
+      <p>Se invierte la pregunta. En vez de «¿cuánto de este paso acepto?»:
+      <strong>«¿hasta dónde le creo al modelo?»</strong></p>
+      <div class="eq">min<sub><span class="var">s</span></sub> ½‖F + J<span class="var">s</span>‖²
+        &nbsp;&nbsp;sujeto a&nbsp;&nbsp; ‖<span class="var">s</span>‖ ≤ Δ</div>
+      <p class="chico">Se acepta o rechaza según la razón entre la reducción real y la predicha:</p>
+      <div class="eq chico">ρ = <span class="frac"><span>f(<span class="var">x</span>) − f(<span class="var">x</span>+<span class="var">s</span>)</span><span>f(<span class="var">x</span>) − m(<span class="var">s</span>)</span></span>
+      &nbsp;&nbsp; ρ &lt; ¼ → achicar Δ &nbsp;·&nbsp; ρ &gt; ¾ → agrandar Δ</div>
+      <p class="chico">Como Δ acota el paso, <strong>funciona aunque J sea singular</strong>: ahí
+      está su ventaja real sobre la búsqueda de línea.</p>
+    </div>
+    <div>
+      <h3>Resolver el subproblema, matriz-libre</h3>
+      <div class="caja mal">
+        <p class="chico"><strong>Steihaug-CG</strong> aplica CG a las ecuaciones normales
+        <span class="m">JᵀJ s = −JᵀF</span>. Eleva al cuadrado el condicionamiento; con J conocida
+        solo por diferencias finitas (ruido ~10⁻⁸) <strong>se estanca en 10⁻⁶</strong>.
+        Lo medimos: no es viable aquí.</p>
+      </div>
+      <div class="caja ok">
+        <p class="chico"><strong>Dogleg</strong> interpola entre el punto de Cauchy
+        <span class="m">s<sub>C</sub> = −(‖g‖²/‖Jg‖²) g</span> y el paso de Newton
+        <span class="m">s<sub>N</sub></span> que GMRES ya calculó. Dos productos extra y listo.
+        Es lo que se usa en la práctica.</p>
+      </div>
+      <p class="chico tenue">Necesita <span class="m">g = JᵀF</span>. Con diferencias finitas se
+      obtiene <span class="m">J·v</span>, no <span class="m">Jᵀ·w</span>: hay que aprovechar la
+      simetría de J (cierta en difusión-reacción) o formarla si n es chico.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 17 · PTC ============================ -->
+<section class="slide">
+  <h2>Estrategia C — continuación pseudo-transitoria (Ψtc)</h2>
+  <div class="cols">
+    <div>
+      <p>Idea distinta y más física: el estado estacionario que buscamos es el límite de un
+      transitorio. <strong>Simulémoslo</strong>.</p>
+      <div class="eq"><span class="frac"><span>d<span class="var">x</span></span><span>dt</span></span> = −F(<span class="var">x</span>) ,&nbsp;&nbsp; <span class="var">x</span>(0) = <span class="var">x</span><sub>0</sub></div>
+      <p class="chico">Euler implícito con paso δ da, en cada paso:</p>
+      <div class="eq">(I + δ J) <span class="var">s</span> = −δ F</div>
+      <ul class="chico">
+        <li><span class="m">δ → 0</span> : <span class="m">s = −δF</span>, máximo descenso muy amortiguado. Robustísimo, lentísimo.</li>
+        <li><span class="m">δ → ∞</span> : <span class="m">Js = −F</span>, <strong>Newton puro</strong>. Rápido, frágil.</li>
+      </ul>
+      <p class="chico"><strong>Regla SER</strong> (Switched Evolution Relaxation):</p>
+      <div class="eq chico">δ<sub>k+1</sub> = δ<sub>k</sub> · ‖F<sub>k</sub>‖ / ‖F<sub>k+1</sub>‖</div>
+      <p class="chico tenue">El paso de tiempo se alarga solo cuando el residuo baja: empieza
+      amortiguado y termina siendo Newton.</p>
+    </div>
+    <div>
+      <div class="caja ok">
+        <h3>Cuándo brilla</h3>
+        <p class="chico">Problemas <strong>dominados por convección</strong> y estados
+        estacionarios de EDPs: CFD, transporte, combustión. Es el estándar de facto para
+        Navier-Stokes estacionario.</p>
+      </div>
+      <div class="caja mal">
+        <h3>El detalle honesto</h3>
+        <p class="chico"><span class="m">δ₀</span> es un parámetro <em>de verdad</em>, no un
+        detalle. Medido en Burgers 1D:</p>
+        <table class="chico">
+          <tr><th>δ₀</th><th class="num">resultado</th><th class="num">J·v</th></tr>
+          <tr><td>10⁻²</td><td class="no">no converge</td><td class="num">2 499</td></tr>
+          <tr><td>1</td><td class="no">no converge</td><td class="num">2 772</td></tr>
+          <tr class="destaca"><td>70.7 = 1/‖F₀‖</td><td class="si">converge</td><td class="num">863</td></tr>
+          <tr><td>10⁴</td><td class="si">converge</td><td class="num">200</td></tr>
+          <tr><td>10⁹</td><td class="no">no converge</td><td class="num">15 586</td></tr>
+        </table>
+      </div>
+      <p class="chico">Muy chico sobre-amortigua y se arrastra; muy grande es Newton puro y se
+      pierde la robustez. <span class="m">δ₀ = 1/‖F(x₀)‖</span> es el valor por defecto razonable.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 18 · COMPARATIVA ============================ -->
+<section class="slide">
+  <h2>Las tres estrategias, lado a lado</h2>
+  <table>
+    <tr>
+      <th></th><th>Búsqueda de línea</th><th>Región de confianza</th><th>Ψtc</th>
+    </tr>
+    <tr><td><strong>Qué ajusta</strong></td>
+      <td>la longitud λ del paso</td><td>el radio Δ de confianza</td><td>el paso de tiempo δ</td></tr>
+    <tr><td><strong>Dirección</strong></td>
+      <td>siempre la de Newton</td><td>puede cambiarla (dogleg)</td><td>interpola Newton ↔ descenso</td></tr>
+    <tr><td><strong>Costo extra por paso</strong></td>
+      <td class="si">1 eval. de F por retroceso</td><td>2 productos J·v + posible rechazo</td><td class="si">ninguno</td></tr>
+    <tr><td><strong>Si J es singular</strong></td>
+      <td class="no">λ → 0, se atasca</td><td class="si">Δ lo acota, sigue</td><td class="si">I + δJ es regular</td></tr>
+    <tr><td><strong>Implementación</strong></td>
+      <td class="si">~15 líneas</td><td>~60 líneas</td><td>~20 líneas</td></tr>
+    <tr><td><strong>Parámetros a ajustar</strong></td>
+      <td class="si">α (nunca se toca)</td><td>Δ₀, umbrales de ρ</td><td class="no">δ₀ (sí importa)</td></tr>
+    <tr class="destaca"><td><strong>Cuándo usarla</strong></td>
+      <td>por defecto, siempre</td><td>J mal condicionada o casi singular</td><td>estados estacionarios de EDPs, convección</td></tr>
+  </table>
+  <div class="caja clave" style="margin-top:.8em">
+    <p class="chico">También se combinan: primero continuación en un parámetro físico (ν, λ, Reynolds)
+    para generar un buen <span class="m">x₀</span>, y después Newton-Krylov con búsqueda de línea
+    desde ahí. Es lo que se hace en producción.</p>
+  </div>
+</section>
+
+<!-- ============================ 19 · DEMO 3 problema ============================ -->
+<section class="slide">
+  <h2>Demostración 3 — un problema que sí duele</h2>
+  <div class="cols">
+    <div>
+      <p>Burgers estacionaria en 1D:</p>
+      <div class="eq">−ν u″ + u u′ = 0 ,&nbsp;&nbsp; u(0) = 1 ,&nbsp; u(1) = −1</div>
+      <p class="chico">Con <span class="m">ν = 0.01</span> la solución tiene una <em>capa límite
+      interna</em>: una transición casi vertical en <span class="m">x = ½</span> de anchura ≈ 2ν.
+      Es el prototipo de lo que aparece al resolver Navier-Stokes estacionario.</p>
+      <ul class="chico">
+        <li>N = 200 nodos, diferencias centradas</li>
+        <li>Péclet de celda = h/ν = 0.5 &lt; 2 → <strong>la discretización es estable</strong>;
+        la dificultad es genuinamente la no linealidad</li>
+        <li>7 puntos iniciales <span class="m">u₀ = a(1−2x)</span>, con
+        <span class="m">a ∈ {−3,…,3}</span></li>
+      </ul>
+      <p class="chico tenue">Todas las corridas comparten paso de Newton, GMRES, precondicionador
+      y término de forzado. <strong>Lo único que cambia es la globalización.</strong></p>
+    </div>
+    <div>
+      <figure>
+        <img src="%%FIG:fig3a_problema.png%%" alt="Problema de Burgers">
+        <figcaption>La capa se afila al bajar ν, y los puntos iniciales (rectas grises) quedan cada
+        vez más lejos de la solución.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 20 · DEMO 3 resultados ============================ -->
+<section class="slide compacta">
+  <h2>El resultado central de la exposición</h2>
+  <figure class="crece">
+    <img src="%%FIG:fig3b_exito.png%%" alt="Tasa de éxito y costo por estrategia">
+  </figure>
+  <table style="margin-top:.3em">
+    <tr><th>estrategia</th><th class="num">converge desde</th><th class="num">J·v (mediana)</th></tr>
+    <tr><td>Newton inexacto, sin globalizar</td><td class="num no">1 de 7 &nbsp;(14 %)</td><td class="num">10 631</td></tr>
+    <tr><td>Búsqueda de línea (Armijo)</td><td class="num">5 de 7 &nbsp;(71 %)</td><td class="num">3 114</td></tr>
+    <tr><td>Región de confianza (dogleg)</td><td class="num">3 de 7 &nbsp;(43 %)</td><td class="num">3 174</td></tr>
+    <tr class="destaca"><td>Continuación pseudo-transitoria</td><td class="num si">7 de 7 &nbsp;(100 %)</td><td class="num si">863</td></tr>
+  </table>
+  <p class="chico tenue centro">Ψtc no solo es la más robusta: es también <strong>12 veces más
+  barata</strong> que no globalizar. La robustez no se paga; se cobra.</p>
+</section>
+
+<!-- ============================ 21 · DEMO 3 residuos ============================ -->
+<section class="slide compacta">
+  <h2>El teorema, en una gráfica</h2>
+  <figure class="crece">
+    <img src="%%FIG:fig3c_residuales.png%%" alt="Historias de residuo">
+  </figure>
+  <div class="cols" style="margin-top:.2em">
+    <div class="caja mal">
+      <p class="chico"><strong>La curva roja sube</strong>, de 1.4·10⁻² hasta 3.9·10¹ — casi tres
+      órdenes de magnitud <em>peor</em> que el punto de partida. Newton sin globalizar no tiene
+      ninguna obligación de mejorar, y no mejora.</p>
+    </div>
+    <div class="caja ok">
+      <p class="chico"><strong>Las otras tres nunca suben.</strong> No es suerte: es exactamente lo
+      que impone <span class="m">‖F(x+λs)‖ ≤ (1−αλ)‖F(x)‖</span> y su equivalente
+      <span class="m">ρ &gt; 0</span> en la región de confianza. La monotonía es la garantía,
+      escrita en el código.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 22 · LO QUE NO GARANTIZA ============================ -->
+<section class="slide">
+  <h2>Lo que la globalización <em>no</em> garantiza</h2>
+  <div class="cols">
+    <div>
+      <div class="caja clave">
+        <h3>El enunciado exacto</h3>
+        <p class="chico">Si F ∈ C¹ y los iterados quedan en un conjunto acotado, la globalización
+        garantiza que la sucesión converge a un <strong>punto estacionario de
+        <span class="m">f = ½‖F‖²</span></strong>.</p>
+        <p class="chico" style="margin-top:.5em">Un punto estacionario de <span class="m">f</span>
+        <strong>no tiene por qué ser raíz de F</strong>.</p>
+      </div>
+      <h3>Los dos modos de fallo</h3>
+      <ul class="chico">
+        <li><strong>Mínimo local de f.</strong> Freudenstein-Roth tiene uno en
+        <span class="m">x₂ ≈ −0.8968</span> con <span class="m">f ≈ 49</span>. Un método que solo
+        sabe bajar cae ahí y se queda.</li>
+        <li><strong>J singular.</strong> Si <span class="m">JᵀF = 0</span> con
+        <span class="m">F ≠ 0</span>, el paso se dispara, λ → 0 y la búsqueda de línea se rinde.</li>
+      </ul>
+      <p class="chico">Y hay un caso incómodo: <strong>a veces Newton puro gana</strong>, justamente
+      porque sus pasos salvajes saltan por encima del valle donde el método prudente se queda
+      atrapado.</p>
+    </div>
+    <div>
+      <figure>
+        <img src="%%FIG:clase1_cuencas.png%%" alt="Cuencas de convergencia">
+        <figcaption>Arriba, problema con exponencial empinada: Armijo gana (100 % vs 98 %).
+        Abajo, Freudenstein-Roth: Armijo <strong>pierde</strong> (37 % vs 83 %), atrapado en el
+        mínimo local. Rojo oscuro = no llega a ninguna raíz.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 23 · EN LA PRÁCTICA ============================ -->
+<section class="slide">
+  <h2>En la práctica</h2>
+  <div class="cols">
+    <div>
+      <h3>Herramientas</h3>
+<pre><code><span class="c"># SciPy — Newton-Krylov con búsqueda de línea</span>
+<span class="k">from</span> scipy.optimize <span class="k">import</span> newton_krylov
+u = newton_krylov(F, u0, method=<span class="s">'lgmres'</span>,
+                  f_tol=1e-9)
+
+<span class="c"># PETSc SNES — el estándar en HPC</span>
+<span class="c">#   -snes_type newtonls | newtontr | pseudo</span>
+<span class="c">#   -snes_mf_operator   (matriz-libre)</span>
+<span class="c">#   -snes_ksp_ew        (Eisenstat-Walker)</span>
+
+<span class="c"># SUNDIALS KINSOL — con Ψtc integrado</span></code></pre>
+      <p class="chico tenue">La implementación propia sirve para <em>entender</em>. Para producción,
+      úsese una biblioteca: tienen el precondicionamiento, el paralelismo y los casos límite
+      resueltos.</p>
+    </div>
+    <div>
+      <h3>Errores comunes y cómo se ven</h3>
+      <table>
+        <tr><th>síntoma</th><th>causa probable</th></tr>
+        <tr><td>‖F‖ baja y se estanca en ~10⁻⁸</td><td>límite del Jacobiano por diferencias finitas; bajar la tolerancia o dar J analítica</td></tr>
+        <tr><td>GMRES agota iteraciones siempre</td><td>falta precondicionador, o η pedido por debajo de lo alcanzable</td></tr>
+        <tr><td>λ → 0 en cada paso</td><td>J casi singular; probar región de confianza</td></tr>
+        <tr><td>converge pero a algo con ‖F‖ ≫ 0</td><td>mínimo local de f; cambiar x₀ o usar continuación</td></tr>
+        <tr><td>diverge en 2 pasos</td><td>falta globalizar, o el signo de F hace inestable el flujo en Ψtc</td></tr>
+        <tr><td>‖F‖ chico pero la solución está mal</td><td>el error es ‖J⁻¹‖·‖F‖; J mal condicionada</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 24 · CIERRE ============================ -->
+<section class="slide">
+  <h2>Conclusiones</h2>
+  <div class="cols">
+    <div>
+      <ol class="chico" style="margin-left:1.2em">
+        <li style="margin:.6em 0"><strong>Newton es local.</strong> Su convergencia cuadrática es
+        real pero solo dentro de una bola que el teorema no sabe medir.</li>
+        <li style="margin:.6em 0"><strong>Newton inexacto</strong> permite resolver el sistema
+        lineal solo hasta <span class="m">η‖F‖</span>. Bien elegido, η ahorra trabajo sin costar
+        velocidad de convergencia.</li>
+        <li style="margin:.6em 0"><strong>Krylov matriz-libre</strong> convierte el Jacobiano en una
+        función: <span class="m">J·v ≈ [F(x+εv)−F(x)]/ε</span>. Es lo que hace posibles los
+        problemas grandes.</li>
+        <li style="margin:.6em 0"><strong>Globalizar</strong> es lo que hace el método confiable, y
+        se apoya en una sola desigualdad:
+        <span class="m">∇f<sup>T</sup>s ≤ −(1−η)‖F‖²</span>.</li>
+        <li style="margin:.6em 0"><strong>Mídase el trabajo, no las iteraciones.</strong> La métrica
+        honesta son las evaluaciones de F.</li>
+      </ol>
+    </div>
+    <div>
+      <div class="caja clave">
+        <h3>Si hay que llevarse una sola cosa</h3>
+        <p>La globalización no promete encontrar la raíz.</p>
+        <p style="margin-top:.4em">Promete que <span class="m">‖F‖</span> <strong>nunca
+        aumenta</strong>, y que se converge a un punto estacionario de
+        <span class="m">f = ½‖F‖²</span>.</p>
+        <p class="chico tenue" style="margin-top:.5em">Saber exactamente qué se promete es lo que
+        permite diagnosticar cuando el método falla.</p>
+      </div>
+      <h3>Referencias</h3>
+      <ul class="chico tenue">
+        <li>Kelley, <em>Solving Nonlinear Equations with Newton's Method</em>, SIAM 2003.</li>
+        <li>Dembo, Eisenstat &amp; Steihaug, «Inexact Newton Methods», <em>SINUM</em> 19(2), 1982.</li>
+        <li>Eisenstat &amp; Walker, «Choosing the forcing terms…», <em>SISC</em> 17(1), 1996.</li>
+        <li>Knoll &amp; Keyes, «Jacobian-free Newton-Krylov methods», <em>JCP</em> 193, 2004.</li>
+        <li>Pawlowski, Shadid, Simonis &amp; Walker, «Globalization techniques…», <em>SIAM Review</em> 48(4), 2006.</li>
+        <li>Nocedal &amp; Wright, <em>Numerical Optimization</em>, 2ª ed., Springer 2006.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</div><!-- /deck -->
+
+<div id="barra"></div>
+<div id="num"></div>
+<div id="tema">Convergencia global · Newton-Krylov</div>
+<div id="ayuda"><div>
+  <h3 style="margin-top:0">Atajos de teclado</h3>
+  <table>
+    <tr><td><kbd>→</kbd> <kbd>↓</kbd> <kbd>espacio</kbd> <kbd>PgDn</kbd></td><td>siguiente</td></tr>
+    <tr><td><kbd>←</kbd> <kbd>↑</kbd> <kbd>PgUp</kbd></td><td>anterior</td></tr>
+    <tr><td><kbd>Inicio</kbd> / <kbd>Fin</kbd></td><td>primera / última</td></tr>
+    <tr><td><kbd>1</kbd>…<kbd>9</kbd></td><td>ir a esa diapositiva</td></tr>
+    <tr><td><kbd>o</kbd></td><td>vista general (clic para ir)</td></tr>
+    <tr><td><kbd>f</kbd></td><td>pantalla completa</td></tr>
+    <tr><td><kbd>p</kbd></td><td>imprimir / exportar a PDF</td></tr>
+    <tr><td><kbd>?</kbd> o <kbd>Esc</kbd></td><td>abrir / cerrar esta ayuda</td></tr>
+  </table>
+</div></div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var n = slides.length, i = 0;
+  var barra = document.getElementById('barra');
+  var num   = document.getElementById('num');
+  var ayuda = document.getElementById('ayuda');
+
+  function ir(k){
+    i = Math.max(0, Math.min(n-1, k));
+    slides.forEach(function(s,j){ s.classList.toggle('activa', j===i); });
+    barra.style.width = ((i+1)/n*100) + '%';
+    num.textContent = (i+1) + ' / ' + n;
+    try { location.hash = i+1; } catch(e){}
+  }
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === '?' ){ ayuda.classList.toggle('on'); return; }
+    if (e.key === 'Escape'){
+      if (ayuda.classList.contains('on')) { ayuda.classList.remove('on'); return; }
+      if (document.body.classList.contains('general')) { document.body.classList.remove('general'); return; }
+    }
+    if (ayuda.classList.contains('on')) return;
+    switch(e.key){
+      case 'ArrowRight': case 'ArrowDown': case ' ': case 'PageDown':
+        e.preventDefault(); ir(i+1); break;
+      case 'ArrowLeft': case 'ArrowUp': case 'PageUp':
+        e.preventDefault(); ir(i-1); break;
+      case 'Home': ir(0); break;
+      case 'End':  ir(n-1); break;
+      case 'o': case 'O': document.body.classList.toggle('general'); break;
+      case 'f': case 'F':
+        if (document.fullscreenElement) document.exitFullscreen();
+        else document.documentElement.requestFullscreen();
+        break;
+      case 'p': case 'P': window.print(); break;
+      default:
+        if (/^[1-9]$/.test(e.key)) ir(parseInt(e.key,10)-1);
+    }
+  });
+
+  // clic: avanzar; en vista general, ir a la diapositiva
+  slides.forEach(function(s,j){
+    s.addEventListener('click', function(){
+      if (document.body.classList.contains('general')){
+        document.body.classList.remove('general'); ir(j);
+      }
+    });
+  });
+  document.addEventListener('click', function(e){
+    if (document.body.classList.contains('general')) return;
+    if (ayuda.classList.contains('on')) { ayuda.classList.remove('on'); return; }
+    if (e.clientX > window.innerWidth*0.75) ir(i+1);
+    else if (e.clientX < window.innerWidth*0.25) ir(i-1);
+  });
+
+  // deslizar en pantalla táctil
+  var x0 = null;
+  document.addEventListener('touchstart', function(e){ x0 = e.touches[0].clientX; });
+  document.addEventListener('touchend', function(e){
+    if (x0 === null) return;
+    var dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 50) ir(dx < 0 ? i+1 : i-1);
+    x0 = null;
+  });
+
+  var inicial = parseInt((location.hash||'').replace('#',''), 10);
+  ir(isNaN(inicial) ? 0 : inicial-1);
+  if (/[?&]print/.test(location.search)) window.print();
+})();
+</script>
+</body>
+</html>
