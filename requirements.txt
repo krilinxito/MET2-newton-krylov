@@ -1,0 +1,30 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Métodos Numéricos II (DAT-252) — UMSA
+# Estrategias para la convergencia global · Métodos de Newton-Krylov
+#
+#   python3 -m venv venv
+#   source venv/bin/activate          (en Windows:  venv\Scripts\activate)
+#   pip install -r requirements.txt
+#   jupyter lab
+#
+# Los tres cuadernos de ejercicios_clase/ solo necesitan las tres primeras
+# líneas, y en Google Colab ya vienen instaladas: ahí no hace falta nada.
+# ─────────────────────────────────────────────────────────────────────────────
+
+numpy>=1.23
+scipy>=1.12          # gmres(rtol=...); hasta la 1.11 ese parámetro se llamaba tol
+matplotlib>=3.6
+
+# Para abrir y ejecutar los cuadernos. Omitir si se usa Colab o VS Code.
+jupyterlab>=4.0
+
+# ─────────────────────────────────────────────────────────────────────────────
+# El resto del proyecto no agrega dependencias:
+#   informe/generar_informe.py  arma el .docx con zipfile de la biblioteca
+#                               estándar (no usa python-docx) y matplotlib
+#                               para las ecuaciones
+#   presentacion/build_presentacion.py  solo usa base64, json y pathlib
+#
+# Versiones con las que se verificó todo el trabajo:
+#   python 3.14.7 · numpy 2.4.4 · scipy 1.17.1 · matplotlib 3.10.9
+# ─────────────────────────────────────────────────────────────────────────────

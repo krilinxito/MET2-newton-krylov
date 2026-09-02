@@ -1733,7 +1733,9 @@ Todo el código está en **cuadernos de Jupyter**. Se abren y se ejecutan todas 
 celdas de arriba abajo (`Run All`).
 
 ```bash
-pip install numpy scipy matplotlib jupyterlab
+python3 -m venv venv
+source venv/bin/activate        # en Windows:  venv\Scripts\activate
+pip install -r requirements.txt
 jupyter lab
 ```
 

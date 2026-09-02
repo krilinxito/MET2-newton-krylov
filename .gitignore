@@ -2,6 +2,11 @@
 __pycache__/
 *.py[cod]
 
+# Entornos virtuales
+venv/
+.venv/
+env/
+
 # Archivos de bloqueo de LibreOffice / MS Office
 .~lock.*#
 ~$*

@@ -781,8 +781,11 @@ def anexo(doc):
     doc.add(salto_pagina())
     doc.titulo_seccion("ANEXO A. CÓMO EJECUTAR EL CÓDIGO")
     doc.texto("Requisitos: Python 3.9 o superior con NumPy, SciPy, Matplotlib y "
-              "JupyterLab. Todo el código está en cuadernos de Jupyter.")
-    doc.texto("`pip install numpy scipy matplotlib jupyterlab`", jc="left")
+              "JupyterLab. Todo el código está en cuadernos de Jupyter y las "
+              "dependencias están declaradas en `requirements.txt`.")
+    doc.texto("`python3 -m venv venv`", jc="left", despues=40)
+    doc.texto("`source venv/bin/activate`", jc="left", despues=40)
+    doc.texto("`pip install -r requirements.txt`", jc="left")
     doc.titulo_sub("A.1. Notebooks de la exposición")
     doc.texto("`cd ejercicios_exposicion && jupyter lab`", jc="left", despues=40)
     doc.texto("`ej1_newton_vs_globalizado.ipynb`      # ~10 s", jc="left", despues=40)

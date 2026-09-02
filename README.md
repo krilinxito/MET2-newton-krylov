@@ -25,11 +25,16 @@ molde de formato.
 ## Requisitos
 
 ```bash
-pip install numpy scipy matplotlib jupyterlab
+python3 -m venv venv
+source venv/bin/activate        # en Windows:  venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-Python 3.9 o superior. Nada más: no hace falta `python-docx` ni LaTeX. Los cuadernos
-de `ejercicios_clase/` también se abren directamente en Google Colab.
+Son tres paquetes —numpy, scipy y matplotlib— más JupyterLab para abrir los
+cuadernos. Nada más: no hace falta `python-docx` ni LaTeX.
+
+Los tres cuadernos de `ejercicios_clase/` necesitan solo los tres primeros y también
+se abren directamente en **Google Colab**, donde ya vienen instalados.
 
 ---
 
@@ -130,6 +135,7 @@ MET2/
 ├── Informe_NewtonKrylov_DAT252.docx   ← informe final
 ├── guia_de_estudio.md                 ← manual desde cero + guion de exposición
 ├── Gnombres_Dat252.docx               ← plantilla institucional (no se toca)
+├── requirements.txt                   ← dependencias para el venv
 │
 ├── ejercicios_exposicion/
 │   ├── nk_lib.py                      ← núcleo: J·v, forzado, Armijo, dogleg, Steihaug, Ψtc
