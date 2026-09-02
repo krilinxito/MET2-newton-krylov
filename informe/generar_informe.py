@@ -37,7 +37,6 @@ RAIZ = pathlib.Path(__file__).resolve().parent.parent
 PLANTILLA = RAIZ / "Gnombres_Dat252.docx"
 SALIDA = RAIZ / "Informe_NewtonKrylov_DAT252.docx"
 FIG_EXPO = RAIZ / "ejercicios_exposicion" / "figuras"
-FIG_CLASE = RAIZ / "ejercicios_clase"
 CACHE = pathlib.Path(__file__).resolve().parent / "figuras"
 LOGO_ORIGEN = pathlib.Path("/home/max1/ml/jogo/rl_combat/informe/figuras/Logo_Umsa.png")
 
@@ -76,14 +75,14 @@ def ecuacion(doc, tex, tam=13, escala=1.0):
 
 
 def figura(doc, nombre, pie, ancho_cm=15.0):
-    for carpeta in (FIG_EXPO, FIG_CLASE):
+    for carpeta in (FIG_EXPO,):
         ruta = carpeta / nombre
         if ruta.exists():
             doc.imagen(ruta, ancho_cm=ancho_cm, despues=60)
             doc.pie_figura(pie)
             return
     raise FileNotFoundError(
-        f"Falta {nombre}. Corré primero los ejercicios de ejercicios_exposicion/.")
+        f"Falta {nombre}. Corré primero los notebooks de ejercicios_exposicion/.")
 
 
 # =============================================================================
@@ -434,9 +433,9 @@ def implementacion(doc):
     doc.tabla([
         ["Archivo", "Contenido"],
         ["`nk_lib.py`", "Núcleo compartido: J·v, forzado, Armijo, Steihaug, dogleg, Ψtc"],
-        ["`ej1_newton_vs_globalizado.py`", "Por qué hace falta globalizar (1D y 2×2)"],
-        ["`ej2_bratu1d_newton_krylov.py`", "El método completo sobre Bratu 1D"],
-        ["`ej3_comparativa_globalizacion.py`", "Las cuatro estrategias sobre Burgers 1D"],
+        ["`ej1_newton_vs_globalizado.ipynb`", "Por qué hace falta globalizar (1D y 2×2)"],
+        ["`ej2_bratu1d_newton_krylov.ipynb`", "El método completo sobre Bratu 1D"],
+        ["`ej3_comparativa_globalizacion.ipynb`", "Las cuatro estrategias sobre Burgers 1D"],
     ], anchos=[3400, 5960], sz=17)
     doc.pie_figura("**Tabla 3.** Organización del código de la exposición.")
 
@@ -570,11 +569,11 @@ def resultados(doc):
     doc.texto(
         "En cuanto al paso __ε__ de la diferencia finita, la medición confirmó el "
         "comportamiento en «V» previsto por la teoría, pero con un matiz: el mínimo "
-        "medido no cayó exactamente en __√εₘ__, sino unos dos órdenes de magnitud "
+        "medido cayó en __7.5×10⁻⁷__, casi dos órdenes de magnitud "
         "por encima. La explicación está en la fórmula completa de la Sección 2.3: en "
         "este problema el operador está dominado por su parte lineal, __‖F″‖__ es "
         "pequeña frente a __‖F‖__ y el óptimo se desplaza. Usar __√εₘ__ de todos "
-        "modos da un error unas cien veces mayor que el óptimo — y resulta "
+        "modos da un error unas treinta veces mayor que el óptimo — y resulta "
         "**irrelevante**, porque Newton inexacto ya tolera un residuo lineal de "
         "__η‖F‖__ con __η ~ 10⁻²__: un Jacobiano con siete cifras correctas le sobra.")
     figura(doc, "fig2a_epsilon.png",
@@ -683,7 +682,7 @@ def resultados(doc):
         "donde el método prudente queda atrapado. Sobre Freudenstein-Roth, Newton puro "
         "alcanza la raíz desde el 83 % de los puntos iniciales y Newton con Armijo solo "
         "desde el 37 %.")
-    figura(doc, "clase1_cuencas.png",
+    figura(doc, "fig1d_cuencas_comparadas.png",
            "**Figura 9.** Cuencas de convergencia. Arriba, un problema con exponencial "
            "empinada: la búsqueda de línea gana (100 % frente a 98 %). Abajo, "
            "Freudenstein-Roth: la búsqueda de línea pierde (37 % frente a 83 %), "
@@ -781,25 +780,28 @@ def referencias(doc):
 def anexo(doc):
     doc.add(salto_pagina())
     doc.titulo_seccion("ANEXO A. CÓMO EJECUTAR EL CÓDIGO")
-    doc.texto("Requisitos: Python 3.9 o superior con NumPy, SciPy y Matplotlib.")
-    doc.texto("`pip install numpy scipy matplotlib`", jc="left")
-    doc.titulo_sub("A.1. Ejercicios de la exposición")
-    doc.texto("`cd ejercicios_exposicion`", jc="left", despues=40)
-    doc.texto("`python3 ej1_newton_vs_globalizado.py`      # ~20 s", jc="left", despues=40)
-    doc.texto("`python3 ej2_bratu1d_newton_krylov.py`      # ~20 s", jc="left", despues=40)
-    doc.texto("`python3 ej3_comparativa_globalizacion.py`  # ~40 s", jc="left")
+    doc.texto("Requisitos: Python 3.9 o superior con NumPy, SciPy, Matplotlib y "
+              "JupyterLab. Todo el código está en cuadernos de Jupyter.")
+    doc.texto("`pip install numpy scipy matplotlib jupyterlab`", jc="left")
+    doc.titulo_sub("A.1. Notebooks de la exposición")
+    doc.texto("`cd ejercicios_exposicion && jupyter lab`", jc="left", despues=40)
+    doc.texto("`ej1_newton_vs_globalizado.ipynb`      # ~10 s", jc="left", despues=40)
+    doc.texto("`ej2_bratu1d_newton_krylov.ipynb`      # ~25 s", jc="left", despues=40)
+    doc.texto("`ej3_comparativa_globalizacion.ipynb`  # ~45 s", jc="left")
     doc.texto(
-        "Cada programa imprime tablas por consola y deja sus figuras en "
-        "`ejercicios_exposicion/figuras/`. Todas las cifras de la Sección 5 salen de "
+        "Cada cuaderno imprime tablas, muestra sus gráficas en línea y además deja "
+        "las figuras en `ejercicios_exposicion/figuras/`, que son las que consumen "
+        "este informe y la presentación. Todas las cifras de la Sección 5 salen de "
         "esas corridas.")
-    doc.titulo_sub("A.2. Ejercicios para la clase")
-    doc.texto("`cd ejercicios_clase`", jc="left", despues=40)
-    doc.texto("`python3 clase1_armijo.py`           # ~5 s", jc="left", despues=40)
-    doc.texto("`python3 clase2_matrix_free.py`      # ~25 s", jc="left", despues=40)
-    doc.texto("`python3 clase3_bratu_forcing.py`    # ~35 s", jc="left")
+    doc.titulo_sub("A.2. Notebooks para la clase")
+    doc.texto("`cd ejercicios_clase && jupyter lab`", jc="left", despues=40)
+    doc.texto("`01_circuito_con_diodos.ipynb`    # punto de operación de un circuito", jc="left", despues=40)
+    doc.texto("`02_placa_que_irradia.ipynb`      # 2 500 incógnitas, sin formar J", jc="left", despues=40)
+    doc.texto("`03_ignicion_termica.ipynb`       # la potencia crítica de ignición", jc="left")
     doc.texto(
         "Son autónomos: cada uno se puede copiar suelto y correr sin el resto del "
-        "proyecto. Terminan con un bloque de preguntas de análisis.")
+        "proyecto, y también se abren directamente en Google Colab. No plantean nada "
+        "que resolver: se ejecutan todas las celdas y se observa el resultado.")
     doc.titulo_sub("A.3. Regenerar la presentación y este informe")
     doc.texto("`python3 presentacion/build_presentacion.py`", jc="left", despues=40)
     doc.texto("`python3 informe/generar_informe.py`", jc="left")

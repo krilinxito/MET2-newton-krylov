@@ -16,8 +16,7 @@ import re
 import sys
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
-FIGURAS = [RAIZ / "ejercicios_exposicion" / "figuras",
-           RAIZ / "ejercicios_clase"]
+FIGURAS = [RAIZ / "ejercicios_exposicion" / "figuras"]
 SALIDA = RAIZ / "presentacion.html"
 PLANTILLA = pathlib.Path(__file__).with_name("plantilla.html")
 
@@ -29,8 +28,8 @@ def data_uri(nombre):
             b64 = base64.b64encode(ruta.read_bytes()).decode("ascii")
             return f"data:image/png;base64,{b64}"
     raise FileNotFoundError(
-        f"No encuentro la figura {nombre!r}. Corré primero los ejercicios:\n"
-        f"    cd ejercicios_exposicion && python3 ej1_*.py && python3 ej2_*.py && python3 ej3_*.py")
+        f"No encuentro la figura {nombre!r}. Corré primero los notebooks de\n"
+        f"    ejercicios_exposicion/  (ej1, ej2 y ej3), que las generan.")
 
 
 def main():

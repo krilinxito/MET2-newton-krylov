@@ -678,7 +678,7 @@ Y las cosas empeoran. Siguiendo con Newton puro desde ahí:
 | 3 | … | desborda |
 
 En 16 iteraciones el residuo se hace `inf` y el programa se rinde. Este es
-**exactamente** el resultado del ejercicio 1 (`ej1_newton_vs_globalizado.py`, tabla
+**exactamente** el resultado del ejercicio 1 (`ej1_newton_vs_globalizado.ipynb`, tabla
 de la Parte B): *Newton puro — NO converge — divergió (‖F‖ desbordó)*.
 
 **Y ahora la solución, adelantada.** ¿Qué pasa si en vez de dar el paso completo
@@ -903,7 +903,7 @@ lineal en todo el proceso**.
 Si un `η` chico da mejor convergencia, la tentación es poner `η = 10⁻¹²` y olvidarse.
 Es un error, y tiene nombre: **oversolving** (resolver de más).
 
-Lo medimos. El ejercicio 2 (`ej2_bratu1d_newton_krylov.py`) resuelve la ecuación de
+Lo medimos. El ejercicio 2 (`ej2_bratu1d_newton_krylov.ipynb`) resuelve la ecuación de
 Bratu con `n = 250`, cambiando **únicamente** el valor de `η`:
 
 | η | Iteraciones de Newton | Productos J·v | Tiempo |
@@ -1142,19 +1142,19 @@ despejando:
 
 De ahí sale la receta famosa `ε ≈ √εₘ ≈ 1.5 × 10⁻⁸`.
 
-**Medido de verdad.** Esta es la tabla que produce `clase2_matrix_free.py`,
+**Medido de verdad.** Esta es la tabla que produce `ej2_bratu1d_newton_krylov.ipynb`,
 comparando el `J·v` aproximado contra el Jacobiano analítico exacto:
 
 | ε | error relativo | quién manda |
 |---|---|---|
-| 10⁻¹⁶ | 9.5·10⁻¹ (¡95 %!) | cancelación |
-| 10⁻¹⁴ | 2.9·10⁻² | cancelación |
-| 10⁻¹² | 2.8·10⁻⁴ | cancelación |
-| 10⁻¹⁰ | 3.0·10⁻⁶ | cancelación |
-| 10⁻⁸ | 2.7·10⁻⁸ | cancelación |
-| 10⁻⁶ | 2.9·10⁻¹⁰ | ← mínimo |
-| 10⁻⁴ | 5.7·10⁻⁹ | truncamiento |
-| 10⁻² | 5.7·10⁻⁷ | truncamiento |
+| 10⁻¹⁶ | 9.5·10⁻² (casi el 10 %) | cancelación |
+| 10⁻¹⁴ | 9.0·10⁻⁴ | cancelación |
+| 10⁻¹² | 8.9·10⁻⁶ | cancelación |
+| 10⁻¹⁰ | 9.3·10⁻⁸ | cancelación |
+| 10⁻⁸ | 8.6·10⁻¹⁰ | cancelación |
+| 10⁻⁶ | 2.3·10⁻¹¹ | ← mínimo |
+| 10⁻⁴ | 2.2·10⁻⁹ | truncamiento |
+| 10⁻² | 2.2·10⁻⁷ | truncamiento |
 
 Dibujada, la curva tiene forma de **V**:
 
@@ -1172,13 +1172,13 @@ Dibujada, la curva tiene forma de **V**:
          └── cancelación ──┘        └─ truncamiento ─┘
 ```
 
-**Un detalle honesto que salió midiendo.** El mínimo medido cayó en `2.5·10⁻⁶`, dos
-órdenes por encima de `√εₘ = 1.5·10⁻⁸`. No es un error del experimento: en ese
-problema concreto el operador está dominado por su parte lineal, así que `‖F″‖` es
-chica y —según la fórmula de arriba— el óptimo se corre hacia arriba.
+**Un detalle honesto que salió midiendo.** El mínimo medido cayó en `7.5·10⁻⁷`, casi
+dos órdenes por encima de `√εₘ = 1.5·10⁻⁸`. No es un error del experimento: en este
+problema el operador está dominado por su parte lineal, así que `‖F″‖` es chica y
+—según la fórmula de arriba— el óptimo se corre hacia arriba.
 
-¿Importa? **No.** Usar `√εₘ` da un error de `1.9·10⁻⁸` en vez del óptimo `1.8·10⁻¹⁰`:
-cien veces peor y perfectamente irrelevante, porque Newton inexacto ya tolera un
+¿Importa? **No.** Usar `√εₘ` da un error de `6.9·10⁻¹⁰` en vez del óptimo `2.1·10⁻¹¹`:
+treinta veces peor y perfectamente irrelevante, porque Newton inexacto ya tolera un
 residuo lineal de `η‖F‖` con `η ~ 10⁻²` (§4.3). **Un Jacobiano con 7 cifras correctas
 le sobra.** Por eso `√εₘ` se usa siempre: no es óptimo, pero nunca es catastrófico y
 no exige conocer `‖F″‖`.
@@ -1418,7 +1418,7 @@ justo para que el teorema de convergencia funcione (impide que el método se est
 bajando cantidades cada vez más pequeñas) sin frenar nada. Se deja en `10⁻⁴` y no se
 toca.
 
-Medido: en el ejercicio de clase, con `α = 10⁻⁴` el problema converge en 9
+Medido en la Parte F del ejercicio 1: con `α = 10⁻⁴` el problema converge en 9
 iteraciones; con `α = 0.9` no converge en 40.
 
 **El algoritmo (backtracking):**
@@ -1729,22 +1729,33 @@ Todo el método está implementado desde cero en este proyecto, con NumPy y SciP
 pip install numpy scipy matplotlib
 ```
 
-```bash
-# Demostraciones de la exposición (generan las figuras)
-cd ejercicios_exposicion
-python3 ej1_newton_vs_globalizado.py        # ~20 s
-python3 ej2_bratu1d_newton_krylov.py        # ~20 s
-python3 ej3_comparativa_globalizacion.py    # ~40 s
-cd ..
+Todo el código está en **cuadernos de Jupyter**. Se abren y se ejecutan todas las
+celdas de arriba abajo (`Run All`).
 
-# Ejercicios para los compañeros
-cd ejercicios_clase
-python3 clase1_armijo.py                    # ~5 s
-python3 clase2_matrix_free.py               # ~25 s
-python3 clase3_bratu_forcing.py             # ~35 s
+```bash
+pip install numpy scipy matplotlib jupyterlab
+jupyter lab
 ```
 
-No hace falta `python-docx`, ni LaTeX, ni conexión a internet.
+```
+ejercicios_exposicion/          (importan nk_lib.py, que está en la misma carpeta)
+    ej1_newton_vs_globalizado.ipynb        ~10 s
+    ej2_bratu1d_newton_krylov.ipynb        ~25 s
+    ej3_comparativa_globalizacion.ipynb    ~45 s
+
+ejercicios_clase/               (autónomos: se pueden copiar sueltos, o abrir en Colab)
+    01_circuito_con_diodos.ipynb            ~2 s
+    02_placa_que_irradia.ipynb              ~3 s
+    03_ignicion_termica.ipynb              ~15 s
+```
+
+Los tres de la exposición además **escriben sus figuras** en
+`ejercicios_exposicion/figuras/`, que son las que consumen la presentación y el
+informe.
+
+No hace falta `python-docx` ni LaTeX. Los cuadernos de `ejercicios_clase/`
+también se abren directamente en Google Colab, donde numpy, scipy y
+matplotlib ya vienen instalados.
 
 ### 8.2. `nk_lib.py`, función por función
 
@@ -1898,17 +1909,27 @@ Devuelve un objeto `Historial` con todo lo que hace falta para graficar y explic
     motivo        # por qué se detuvo
 ```
 
-### 8.3. Los tres ejercicios de la exposición
+### 8.3. Los seis cuadernos
 
-| Archivo | Qué demuestra |
+**De la exposición** — importan `nk_lib.py` y generan las figuras del deck y del informe:
+
+| Cuaderno | Qué demuestra |
 |---|---|
-| `ej1_newton_vs_globalizado.py` | **Por qué hace falta globalizar.** arctan en 1D, el sistema 2×2, mapas de cuencas de convergencia, y los casos donde la globalización también falla. |
-| `ej2_bratu1d_newton_krylov.py` | **El método completo.** Verifica `J·v` contra el Jacobiano analítico, barre `ε`, compara cinco maneras de elegir `η`, mide el precondicionador y contrasta contra `scipy.optimize.newton_krylov`. |
-| `ej3_comparativa_globalizacion.py` | **Las cuatro estrategias comparadas** sobre la ecuación de Burgers, desde 7 puntos iniciales distintos. |
+| `ej1_newton_vs_globalizado.ipynb` | **Por qué hace falta globalizar.** arctan en 1D, el sistema 2×2, mapas de cuencas, los casos donde la globalización también falla, las cuencas comparadas de Freudenstein-Roth y el barrido del parámetro α. |
+| `ej2_bratu1d_newton_krylov.ipynb` | **El método completo.** Verifica `J·v` contra el Jacobiano analítico, barre `ε`, compara cinco maneras de elegir `η`, mide el precondicionador y contrasta contra `scipy.optimize.newton_krylov`. |
+| `ej3_comparativa_globalizacion.ipynb` | **Las cuatro estrategias comparadas** sobre la ecuación de Burgers, desde 7 puntos iniciales distintos. |
+
+**De la clase** — autónomos, aplicados, sin nada que resolver:
+
+| Cuaderno | Aplicación | Qué ilustra |
+|---|---|---|
+| `01_circuito_con_diodos.ipynb` | Punto de operación de un circuito con diodos | Por qué hay que recortar el paso: es lo que hace SPICE (§6.6) |
+| `02_placa_que_irradia.ipynb` | Placa de acero que disipa por conducción y radiación (`T⁴`), 2 500 incógnitas | El Jacobiano que no cabe y el precondicionador (§5.4, §5.6) |
+| `03_ignicion_termica.ipynb` | Potencia crítica de ignición de un material | Continuación en un parámetro y el punto de retorno (§6.10) |
 
 ### 8.4. Cómo leer la salida
 
-Cuando corra los programas, esto es lo que hay que mirar:
+Cuando ejecute los cuadernos, esto es lo que hay que mirar:
 
 **En las tablas.** Casi todas tienen una columna de **iteraciones de Newton** y otra
 de **productos J·v**. La segunda es la que importa (§4.5). Si las dos apuntan en
@@ -1946,8 +1967,12 @@ probar, en orden de dificultad:
    nada. Eso es lo que significa que un método «escale».
 4. **En `ej3`**, baje `NU = 0.01` a `0.005`. La capa límite se afila y el problema se
    endurece. ¿Cuál estrategia aguanta más?
-5. **En `clase3`**, comente la línea de la salvaguarda de Eisenstat-Walker y vea qué
-   pasa con el total de productos `J·v`.
+5. **En `02_placa_que_irradia`**, suba `n = 50` a `n = 100`. Son 10 000 incógnitas y
+   100 millones de entradas en el Jacobiano que no se forma. ¿Cuánto crece el trabajo
+   con y sin precondicionador?
+6. **En `03_ignicion_termica`**, agregue `λ = 3.513` a la lista de potencias y mire la
+   columna de productos `J·v`. El trabajo explota: es el aviso de que se está llegando
+   al punto de retorno.
 
 ---
 
@@ -2526,12 +2551,12 @@ conclusión contraria.
 - [ ] Abrir `presentacion.html` en el navegador del aula **y probar sin internet**
       (las figuras van empotradas en base64, debe funcionar).
 - [ ] Probar `f` (pantalla completa) y las flechas en ese navegador.
-- [ ] Tener a mano `ej1_newton_vs_globalizado.py` por si piden ver el código.
+- [ ] Tener a mano `ej1_newton_vs_globalizado.ipynb` por si piden ver el código.
 - [ ] **Plan B si falla el proyector:** las seis fórmulas de §14 en la pizarra
       alcanzan para dar la charla entera.
 - [ ] **Plan B si falla Python:** los números están en las tablas de las diapositivas
       8, 12, 17 y 20; no hace falta correr nada en vivo.
-- [ ] Repartir `ejercicios_clase/` a los compañeros (los tres `.py` y el README).
+- [ ] Repartir `ejercicios_clase/` a los compañeros (los tres `.ipynb` y el README).
 
 ## 18. Errores a evitar al exponer
 

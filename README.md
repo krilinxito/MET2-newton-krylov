@@ -14,8 +14,8 @@ Expositores: Maximiliano Gómez Mallo · Iver Samuel Medina Balboa
 | **Presentación** | `presentacion.html` | Doble clic. Un solo archivo, funciona sin internet. `→` avanza, `f` pantalla completa, `o` vista general, `?` ayuda. |
 | **Informe** | `Informe_NewtonKrylov_DAT252.docx` | 21 páginas, formato de la plantilla institucional. |
 | **Manual y guía** | `guia_de_estudio.md` | Dos partes: un **manual desde cero** que explica el tema sin dar nada por sabido (§1–§11), y el **guion de exposición** con minutaje, qué decir por diapositiva y preguntas probables con respuesta (§12–§18). |
-| **Demostraciones en vivo** | `ejercicios_exposicion/` | Tres programas que se corren durante la exposición. |
-| **Ejercicios para la clase** | `ejercicios_clase/` | Tres programas autónomos y comentados para repartir a los compañeros. |
+| **Demostraciones en vivo** | `ejercicios_exposicion/` | Tres cuadernos de Jupyter que se corren durante la exposición y generan las figuras. |
+| **Cuadernos para la clase** | `ejercicios_clase/` | Tres cuadernos aplicados y autónomos para repartir a los compañeros: se ejecutan y ya, no hay nada que resolver. |
 
 La plantilla original `Gnombres_Dat252.docx` no se modifica: se usa solo como
 molde de formato.
@@ -25,38 +25,43 @@ molde de formato.
 ## Requisitos
 
 ```bash
-pip install numpy scipy matplotlib
+pip install numpy scipy matplotlib jupyterlab
 ```
 
-Python 3.9 o superior. Nada más: no hace falta `python-docx`, ni LaTeX, ni
-conexión a internet.
+Python 3.9 o superior. Nada más: no hace falta `python-docx` ni LaTeX. Los cuadernos
+de `ejercicios_clase/` también se abren directamente en Google Colab.
 
 ---
 
 ## Correr todo
 
+Todo el código está en cuadernos de Jupyter. Se abren y se ejecutan todas las celdas
+de arriba abajo (`Run All`).
+
 ```bash
-# 1. Demostraciones de la exposición (generan las figuras)
-cd ejercicios_exposicion
-python3 ej1_newton_vs_globalizado.py        # ~20 s  · por qué hace falta globalizar
-python3 ej2_bratu1d_newton_krylov.py        # ~20 s  · el método completo sobre Bratu
-python3 ej3_comparativa_globalizacion.py    # ~40 s  · las cuatro estrategias
-cd ..
+jupyter lab
+```
 
-# 2. Ejercicios para los compañeros
-cd ejercicios_clase
-python3 clase1_armijo.py                    # ~5 s
-python3 clase2_matrix_free.py               # ~25 s
-python3 clase3_bratu_forcing.py             # ~35 s
-cd ..
+```
+# 1. Demostraciones de la exposición (generan las figuras del deck y del informe)
+ejercicios_exposicion/ej1_newton_vs_globalizado.ipynb        ~10 s
+ejercicios_exposicion/ej2_bratu1d_newton_krylov.ipynb        ~25 s
+ejercicios_exposicion/ej3_comparativa_globalizacion.ipynb    ~45 s
 
+# 2. Cuadernos para los compañeros (autónomos, no dependen de lo anterior)
+ejercicios_clase/01_circuito_con_diodos.ipynb                 ~2 s
+ejercicios_clase/02_placa_que_irradia.ipynb                   ~3 s
+ejercicios_clase/03_ignicion_termica.ipynb                   ~15 s
+```
+
+```bash
 # 3. Regenerar la presentación y el informe con las figuras nuevas
 python3 presentacion/build_presentacion.py
 python3 informe/generar_informe.py
 ```
 
-El orden importa: la presentación y el informe empotran las figuras que
-producen los ejercicios.
+El orden importa: la presentación y el informe empotran las figuras que producen los
+cuadernos de la exposición.
 
 ---
 
@@ -128,16 +133,16 @@ MET2/
 │
 ├── ejercicios_exposicion/
 │   ├── nk_lib.py                      ← núcleo: J·v, forzado, Armijo, dogleg, Steihaug, Ψtc
-│   ├── ej1_newton_vs_globalizado.py
-│   ├── ej2_bratu1d_newton_krylov.py
-│   ├── ej3_comparativa_globalizacion.py
+│   ├── ej1_newton_vs_globalizado.ipynb
+│   ├── ej2_bratu1d_newton_krylov.ipynb
+│   ├── ej3_comparativa_globalizacion.ipynb
 │   └── figuras/
 │
-├── ejercicios_clase/
-│   ├── README.md                      ← enunciados y preguntas de análisis
-│   ├── clase1_armijo.py
-│   ├── clase2_matrix_free.py
-│   └── clase3_bratu_forcing.py
+├── ejercicios_clase/                  ← aplicados y autónomos, solo ejecutar
+│   ├── README.md
+│   ├── 01_circuito_con_diodos.ipynb   ← punto de operación de un circuito (SPICE)
+│   ├── 02_placa_que_irradia.ipynb     ← 2 500 incógnitas, sin formar el Jacobiano
+│   └── 03_ignicion_termica.ipynb      ← la potencia crítica de ignición
 │
 ├── presentacion/
 │   ├── plantilla.html                 ← fuente del deck (con marcadores %%FIG:...%%)
